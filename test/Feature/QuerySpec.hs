@@ -295,43 +295,6 @@ spec = do
         [str|[{"id":1,"name":"Windows 7","client_id":1,"client":{"id":1,"name":"Microsoft"}},{"id":3,"name":"IOS","client_id":2,"client":{"id":2,"name":"Apple"}}]|]
 
 
-  describe "Plurality singular" $ do
-    it "will select an existing object" $
-      request methodGet "/items?id=eq.5" [("Prefer","plurality=singular")] ""
-        `shouldRespondWith` ResponseMatcher {
-          matchBody    = Just [json| {"id":5} |]
-        , matchStatus  = 200
-        , matchHeaders = []
-        }
-
-    it "can combine multiple prefer values" $
-      request methodGet "/items?id=eq.5" [("Prefer","plurality=singular , future=new, count=none")] ""
-        `shouldRespondWith` ResponseMatcher {
-          matchBody    = Just [json| {"id":5} |]
-        , matchStatus  = 200
-        , matchHeaders = []
-        }
-
-    it "works in the presence of a range header" $
-      let headers = ("Prefer","plurality=singular") :
-            rangeHdrs (ByteRangeFromTo 0 9) in
-      request methodGet "/items" headers ""
-        `shouldRespondWith` ResponseMatcher {
-          matchBody    = Just [json| {"id":1} |]
-        , matchStatus  = 200
-        , matchHeaders = []
-        }
-
-    it "will respond with 404 when not found" $
-      request methodGet "/items?id=eq.9999" [("Prefer","plurality=singular")] ""
-        `shouldRespondWith` 404
-
-    it "can shape plurality singular object routes" $
-      request methodGet "/projects_view?id=eq.1&select=id,name,clients{*},tasks{id,name}" [("Prefer","plurality=singular")] ""
-        `shouldRespondWith`
-          [str|{"id":1,"name":"Windows 7","clients":{"id":1,"name":"Microsoft"},"tasks":[{"id":1,"name":"Design w7"},{"id":2,"name":"Code w7"}]}|]
-
-
   describe "ordering response" $ do
     it "by a column asc" $
       get "/items?id=lte.2&order=id.asc"
@@ -540,13 +503,6 @@ spec = do
              , matchHeaders = ["Content-Range" <:> "1-2/*"]
              }
 
-
-
-      it "prefer singular" $
-        request methodPost "/rpc/getproject"
-          [("Prefer","plurality=singular")] [json| { "id": 1} |] `shouldRespondWith`
-          [json|{"id":1,"name":"Windows 7","client_id":1}|]
-
       it "select works on the first level" $
         post "/rpc/getproject?select=id,name" [json| { "id": 1} |] `shouldRespondWith`
           [json|[{"id":1,"name":"Windows 7"}]|]
@@ -615,7 +571,7 @@ spec = do
           [("Prefer","params=single-object")] [json| { "p1": 1, "p2": "text", "p3" : {"obj":"text"} } |] `shouldRespondWith`
           [json| { "p1": 1, "p2": "text", "p3" : {"obj":"text"} } |]
 
-      it "accepts parameters from an html form" $ 
+      it "accepts parameters from an html form" $
         request methodPost "/rpc/singlejsonparam"
           [("Prefer","params=single-object"),("Content-Type", "application/x-www-form-urlencoded")]
           ("integer=7&double=2.71828&varchar=forms+are+fun&" <>
