@@ -328,7 +328,7 @@ spec = do
           [json| { id: 99 } |]
           `shouldRespondWith` [json| [{id:99}] |]
 
-    context "in a table" $ do
+    context "in a table" $
 
       it "can set a json column to escaped value" $ do
         _ <- post "/json" [json| { data: {"escaped":"bar"} } |]
